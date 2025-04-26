@@ -17,10 +17,20 @@ h1 {
     text-align: center;
 }
 
+.recipe {
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 1px solid #ddd;
+}
+
+.recipe h2 {
+    margin-top: 0;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 table, th, td {
@@ -28,7 +38,7 @@ table, th, td {
 }
 
 th, td {
-    padding: 10px;
+    padding: 5px;
     text-align: center;
 }
 
@@ -39,9 +49,8 @@ input[type="text"], input[type="number"] {
 }
 
 button {
-    display: block;
-    width: 100%;
-    padding: 10px;
+    padding: 5px 10px;
+    margin-top: 5px;
     background: #28a745;
     color: #fff;
     border: none;
@@ -52,11 +61,10 @@ button:hover {
     background: #218838;
 }
 
-.summary {
-    margin-top: 20px;
+.remove-btn {
+    background: #dc3545;
 }
 
-.summary p {
-    font-size: 18px;
-    margin: 10px 0;
+.remove-btn:hover {
+    background: #c82333;
 }

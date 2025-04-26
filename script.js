@@ -1,18 +1,75 @@
-import { createClient } from '@supabase/supabase-js'
-
 const SUPABASE_URL = 'https://skaoqugxznuvwxeeubbj.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNrYW9xdWd4em51dnd4ZWV1YmJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU2Njg3ODIsImV4cCI6MjA2MTI0NDc4Mn0.GU0ZCz-g2ghjbHmUXTW22NO_BjgA_6-3xedc-r3dMmA';
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-document.addEventListener('DOMContentLoaded', function() {
-    loadRecipes(); // Load recipes from Supabase on page load
+const authContainer = document.getElementById('auth');
+const appContainer = document.getElementById('app');
+const authMessage = document.getElementById('authMessage');
+
+// Listen for auth state changes
+supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (session) {
+        // User is logged in
+        authContainer.style.display = 'none';
+        appContainer.style.display = 'block';
+        loadRecipes(); // Load recipes for the logged-in user
+    } else {
+        // User is logged out
+        authContainer.style.display = 'block';
+        appContainer.style.display = 'none';
+        document.getElementById('recipeList').innerHTML = ''; // Clear recipes
+    }
 });
 
+async function signUp() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const { error } = await supabaseClient.auth.signUp({
+        email: email,
+        password: password,
+    });
+    if (error) {
+        authMessage.textContent = 'Error signing up: ' + error.message;
+    } else {
+        authMessage.textContent = 'Sign up successful. Please check your email to confirm.';
+    }
+}
+
+async function signIn() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const { error } = await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password,
+    });
+    if (error) {
+        authMessage.textContent = 'Error signing in: ' + error.message;
+    } else {
+        authMessage.textContent = 'Signed in successfully.';
+    }
+}
+
+async function signOut() {
+    const { error } = await supabaseClient.auth.signOut();
+    if (error) {
+        console.error('Error signing out:', error.message);
+    } else {
+        console.log('Signed out successfully.');
+    }
+}
+
+
 async function loadRecipes() {
-    const { data, error } = await supabase
+    const user = supabaseClient.auth.getUser(); // Get the current user
+     if (!user) {
+        return; // Don't load recipes if no user is logged in
+    }
+
+    const { data, error } = await supabaseClient
         .from('recipes')
-        .select('*');
+        .select('*')
+        .eq('user_id', (await user).data.user.id); // Filter recipes by user ID
 
     if (error) {
         console.error('Error fetching recipes:', error);
@@ -113,6 +170,14 @@ async function saveRecipe(button) {
         });
     });
 
+    const user = supabaseClient.auth.getUser();
+     if (!user) {
+        alert('You must be logged in to save a recipe.');
+        return;
+    }
+    const userId = (await user).data.user.id;
+
+
     const recipeData = {
         name,
         servings,
@@ -120,17 +185,19 @@ async function saveRecipe(button) {
         cost_per_serving,
         selling_price_per_serving,
         profit_per_serving,
-        ingredients
+        ingredients,
+        user_id: userId // Add the user ID
     };
 
     let response;
     if (recipeId) {
-        response = await supabase
+        response = await supabaseClient
             .from('recipes')
             .update(recipeData)
-            .eq('id', recipeId);
+            .eq('id', recipeId)
+            .eq('user_id', userId); // Ensure only the owner can update
     } else {
-        response = await supabase
+        response = await supabaseClient
             .from('recipes')
             .insert([recipeData]);
     }
@@ -159,10 +226,18 @@ async function removeRecipe(button) {
     const confirmDelete = confirm('Are you sure you want to delete this recipe?');
     if (!confirmDelete) return;
 
-    const { error } = await supabase
+    const user = supabaseClient.auth.getUser();
+     if (!user) {
+        alert('You must be logged in to delete a recipe.');
+        return;
+    }
+    const userId = (await user).data.user.id;
+
+    const { error } = await supabaseClient
         .from('recipes')
         .delete()
-        .eq('id', recipeId);
+        .eq('id', recipeId)
+        .eq('user_id', userId); // Ensure only the owner can delete
 
     if (error) {
         console.error('Error deleting recipe:', error);

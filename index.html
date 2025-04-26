@@ -8,12 +8,23 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <div class="container">
+    <div id="auth" class="auth-container">
+        <h2>Sign Up or Log In</h2>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="signUp()">Sign Up</button>
+        <button onclick="signIn()">Log In</button>
+        <p id="authMessage"></p>
+    </div>
+
+    <div id="app" class="container" style="display: none;">
         <h1>Recipe Cost Calculator</h1>
+        <button id="signOutButton" onclick="signOut()">Sign Out</button>
         <div id="recipeList">
             </div>
         <button onclick="addRecipe()">Add New Recipe</button>
     </div>
-    <script src="script.js" type="module"></script>
+
+    <script src="script.js"></script>
 </body>
 </html>
